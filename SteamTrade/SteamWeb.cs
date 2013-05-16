@@ -15,14 +15,14 @@ namespace SteamTrade
     public class SteamWeb
     {
 
-        public static string Fetch (string url, string method, NameValueCollection data = null, CookieContainer cookies = null, bool ajax = true)
+        public static string Fetch (string url, string method, SteamID tradePartner = null, NameValueCollection data = null, CookieContainer cookies = null, bool ajax = true)
         {
-            HttpWebResponse response = Request (url, method, data, cookies, ajax);
+            HttpWebResponse response = Request (url, method, tradePartner, data, cookies, ajax);
             StreamReader reader = new StreamReader (response.GetResponseStream ());
             return reader.ReadToEnd ();
         }
 
-        public static HttpWebResponse Request (string url, string method, NameValueCollection data = null, CookieContainer cookies = null, bool ajax = true)
+        public static HttpWebResponse Request (string url, string method, SteamID tradePartner = null, NameValueCollection data = null, CookieContainer cookies = null, bool ajax = true)
         {
             HttpWebRequest request = WebRequest.Create (url) as HttpWebRequest;
 
@@ -31,8 +31,18 @@ namespace SteamTrade
             request.Accept = "text/javascript, text/html, application/xml, text/xml, */*";
             request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
             request.Host = "steamcommunity.com";
-            request.UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11";
-            request.Referer = "http://steamcommunity.com/trade/1";
+            request.UserAgent = "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; Valve Steam Client/1367621987; ) AppleWebKit/535.15 (KHTML, like Gecko) Chrome/18.0.989.0 Safari/535.11";
+            
+            if (tradePartner == null)
+            {
+                request.Referer = "http://steamcommunity.com/trade/1";
+            }
+            else
+            {
+                request.Referer = String.Format("http://steamcommunity.com/trade/{0}", tradePartner.ConvertToUInt64());
+                request.Headers.Add("Origin", "http://www.steamcommunity.com");
+                
+            }
 
             if (ajax)
             {
@@ -69,7 +79,7 @@ namespace SteamTrade
         {
             var data = new NameValueCollection ();
             data.Add ("username", username);
-            string response = Fetch ("https://steamcommunity.com/login/getrsakey", "POST", data, null, false);
+            string response = Fetch ("https://steamcommunity.com/login/getrsakey", "POST", data: data, ajax: false);
             GetRsaKey rsaJSON = JsonConvert.DeserializeObject<GetRsaKey> (response);
 
 
@@ -140,7 +150,7 @@ namespace SteamTrade
 
                 data.Add ("rsatimestamp", time);
 
-                HttpWebResponse webResponse = Request ("https://steamcommunity.com/login/dologin/", "POST", data, null, false);
+                HttpWebResponse webResponse = Request ("https://steamcommunity.com/login/dologin/", "POST", data: data, ajax: false);
 
                 StreamReader reader = new StreamReader (webResponse.GetResponseStream ());
                 string json = reader.ReadToEnd ();

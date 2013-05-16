@@ -16,7 +16,7 @@ namespace SteamTrade
         public static Inventory FetchInventory (ulong steamId, string apiKey)
         {
             var url = "http://api.steampowered.com/IEconItems_440/GetPlayerItems/v0001/?key=" + apiKey + "&steamid=" + steamId;
-            string response = SteamWeb.Fetch (url, "GET", null, null, false);
+            string response = SteamWeb.Fetch (url, "GET", ajax: false);
             InventoryResponse result = JsonConvert.DeserializeObject<InventoryResponse>(response);
             return new Inventory(result.result);
         }
@@ -35,7 +35,7 @@ namespace SteamTrade
             
             try
             {
-                string response = SteamWeb.Fetch (url, "GET", null, null, true);
+                string response = SteamWeb.Fetch (url, "GET");
                 return JsonConvert.DeserializeObject (response);
             }
             catch (Exception)
@@ -158,7 +158,6 @@ namespace SteamTrade
         {
             public InventoryResult result;
         }
-
     }
 }
 

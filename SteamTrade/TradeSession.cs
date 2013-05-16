@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Specialized;
 using System.Net;
+using System.Web;
 using Newtonsoft.Json;
+using SteamKit2;
 
 namespace SteamTrade
 {
@@ -33,7 +35,28 @@ namespace SteamTrade
             data.Add ("version", "" + Version);
             
             string response = Fetch (baseTradeURL + "tradestatus", "POST", data);
-            return JsonConvert.DeserializeObject<StatusObj> (response);
+            return JsonConvert.DeserializeObject<StatusObj>(response);
+        }
+
+
+        public dynamic GetForiegnInventory(SteamID otherId, int contextId )
+        {
+            var data = new NameValueCollection();
+
+            data.Add("sessionid", sessionIdEsc);
+            data.Add("steamid", otherId.ConvertToUInt64().ToString());
+            data.Add("appid", "440");
+            data.Add("contextid", contextId.ToString());
+
+            try
+            {
+                string response = Fetch(baseTradeURL + "foreigninventory", "POST", data);
+                return JsonConvert.DeserializeObject(response);
+            }
+            catch (Exception)
+            {
+                return JsonConvert.DeserializeObject("{\"success\":\"false\"}");
+            }
         }
 
         #region Trade Web command methods
@@ -189,7 +212,7 @@ namespace SteamTrade
         
         string Fetch (string url, string method, NameValueCollection data = null)
         {
-            return SteamWeb.Fetch (url, method, data, cookies);
+            return SteamWeb.Fetch (url, method, OtherSID, data, cookies);
         }
 
         void Init()
@@ -202,7 +225,19 @@ namespace SteamTrade
             cookies.Add (new Cookie ("sessionid", sessionId, String.Empty, SteamCommunityDomain));
             cookies.Add (new Cookie ("steamLogin", steamLogin, String.Empty, SteamCommunityDomain));
 
+            cookies.Add(new Cookie("bCompletedTradeTutorial", "true", String.Empty, SteamCommunityDomain));
+            cookies.Add(new Cookie("strTradeLastInventoryContext", "440_2", String.Empty, SteamCommunityDomain));
+            cookies.Add(new Cookie("recentlyVisitedAppHubs", "440", String.Empty, SteamCommunityDomain));
+            //cookies.Add(new Cookie("strInventoryLastContext", "2", String.Empty, SteamCommunityDomain));
+            cookies.Add(new Cookie("Steam_Language", "english", String.Empty, SteamCommunityDomain));
+            cookies.Add(new Cookie("fakeCC", "US", String.Empty, SteamCommunityDomain));
+            cookies.Add(new Cookie("timezoneOffset", HttpUtility.UrlEncode("-14400,0"), String.Empty, SteamCommunityDomain));
+
             baseTradeURL = String.Format (SteamTradeUrl, OtherSID.ConvertToUInt64 ());
+
+            var response = SteamWeb.Request(baseTradeURL, "GET", cookies: cookies);
+
+            //cookies.Add(response.Cookies);
         }
 
         public class StatusObj
