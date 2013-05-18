@@ -225,12 +225,12 @@ namespace SteamTrade
         public void InitializeTrade (SteamID me, SteamID other)
         {
             // fetch other player's inventory from the Steam API.
-            OtherInventory = Inventory.FetchInventory (other.ConvertToUInt64 (), apiKey);
+            //OtherInventory = Inventory.FetchInventory (other.ConvertToUInt64 (), apiKey);
 
-            if (OtherInventory == null)
-            {
-                throw new InventoryFetchException (other);
-            }
+            //if (OtherInventory == null)
+            //{
+            //    throw new InventoryFetchException (other);
+            //}
             
             // fetch our inventory from the Steam API.
             MyInventory = Inventory.FetchInventory (me.ConvertToUInt64 (), apiKey);

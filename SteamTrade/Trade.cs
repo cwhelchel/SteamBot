@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using SteamKit2;
 using SteamTrade.Exceptions;
 
@@ -456,9 +457,23 @@ namespace SteamTrade
                                 else
                                 {
                                     OtherOfferedItems.Add(itemID);
-                                    Inventory.Item item = OtherInventory.GetItem(itemID);
-                                    Schema.Item schemaItem = CurrentSchema.GetItem(item.Defindex);
-                                    OnUserAddItem(schemaItem, item);
+
+                                    if (OtherInventory != null)
+                                    {
+                                        Inventory.Item item = OtherInventory.GetItem(itemID);
+                                        Schema.Item schemaItem = CurrentSchema.GetItem(item.Defindex);
+                                        OnUserAddItem(schemaItem, item);
+                                    }
+                                    else
+                                    {
+                                        // test getting the inv the steam way
+                                        var f = GetForiegnInventory(OtherSID, trdEvent.contextid);
+
+                                        if (f.Success)
+                                        {
+                                            
+                                        }
+                                    }
                                 }
 
                                 break;
