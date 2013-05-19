@@ -72,6 +72,11 @@ namespace SteamTrade
         public Inventory OtherInventory { get; private set; }
 
         /// <summary> 
+        /// Gets the private inventory of the other user. 
+        /// </summary>
+        public ForeignInventory OtherPrivateInventory { get; private set; }
+
+        /// <summary> 
         /// Gets the inventory of the bot.
         /// </summary>
         public Inventory MyInventory { get; private set; }
@@ -466,13 +471,17 @@ namespace SteamTrade
                                     }
                                     else
                                     {
-                                        // test getting the inv the steam way
-                                        var f = GetForiegnInventory(OtherSID, trdEvent.contextid);
-
-                                        if (f.Success)
+                                        if (OtherPrivateInventory == null)
                                         {
-                                            
+                                            // test getting the inv the steam way
+                                            var f = GetForiegnInventory(OtherSID, trdEvent.contextid);
+                                            OtherPrivateInventory = new ForeignInventory(f);
                                         }
+
+                                        ushort defindex = OtherPrivateInventory.GetDefIndex(itemID);
+
+                                        Schema.Item schemaItem = CurrentSchema.GetItem(defindex);
+                                        OnUserAddItem(schemaItem, null);
                                     }
                                 }
 
