@@ -473,7 +473,7 @@ namespace SteamTrade
                                     {
                                         if (OtherPrivateInventory == null)
                                         {
-                                            // test getting the inv the steam way
+                                            // get the foreign inventory
                                             var f = GetForiegnInventory(OtherSID, trdEvent.contextid);
                                             OtherPrivateInventory = new ForeignInventory(f);
                                         }
@@ -499,9 +499,25 @@ namespace SteamTrade
                                 else
                                 {
                                     OtherOfferedItems.Remove(itemID);
-                                    Inventory.Item item = OtherInventory.GetItem(itemID);
-                                    Schema.Item schemaItem = CurrentSchema.GetItem(item.Defindex);
-                                    OnUserRemoveItem(schemaItem, item);
+
+                                    if (OtherInventory != null)
+                                    {
+                                        Inventory.Item item = OtherInventory.GetItem(itemID);
+                                        Schema.Item schemaItem = CurrentSchema.GetItem(item.Defindex);
+                                        OnUserRemoveItem(schemaItem, item);
+                                    }
+                                    else
+                                    {
+                                        if (OtherPrivateInventory == null)
+                                        {
+                                            var f = GetForiegnInventory(OtherSID, trdEvent.contextid);
+                                            OtherPrivateInventory = new ForeignInventory(f);
+                                        }
+
+                                        ushort defindex = OtherPrivateInventory.GetDefIndex(itemID);
+                                        Schema.Item schemaItem = CurrentSchema.GetItem(defindex);
+                                        OnUserRemoveItem(schemaItem, null);
+                                    }
                                 }
                                 break;
                             case TradeEventType.UserSetReady:

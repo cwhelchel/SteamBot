@@ -39,13 +39,19 @@ namespace SteamTrade
         }
 
 
-        public dynamic GetForiegnInventory(SteamID otherId, int contextId )
+        /// <summary>
+        /// Gets the foriegn inventory.
+        /// </summary>
+        /// <param name="otherId">The other id.</param>
+        /// <param name="contextId">The current trade context id.</param>
+        /// <returns>A dynamic JSON object.</returns>
+        dynamic GetForiegnInventory(SteamID otherId, int contextId )
         {
             var data = new NameValueCollection();
 
             data.Add("sessionid", sessionIdEsc);
             data.Add("steamid", otherId.ConvertToUInt64().ToString());
-            data.Add("appid", "440");
+            data.Add("appid", "440"); // <---------- not portable.
             data.Add("contextid", contextId.ToString());
 
             try
