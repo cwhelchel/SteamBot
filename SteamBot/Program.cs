@@ -75,11 +75,11 @@ namespace SteamBot
                 b.StartBot(); // never returns from this.
             }
 
+            // this loop is needed to keep the botmode console alive.
+            // the sleep keeps the cpu usage low.
             while (true)
             {
-                // we need this in here so we can keep
-                // the console alive so we can read the 
-                // steamguard code if need be.
+                System.Threading.Thread.Sleep(1000);
             }
         }
 
@@ -104,7 +104,7 @@ namespace SteamBot
                 if (manager.ConfigObject.UseSeparateProcesses)
                     SetConsoleCtrlHandler(ConsoleCtrlCheck, true);
 
-                if (manager.ConfigObject.AutoStartBots)
+                if (manager.ConfigObject.AutoStartAllBots)
                 {
                     var startedOk = manager.StartBots();
 

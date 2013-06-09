@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.ComponentModel;
 using SteamKit2;
 using SteamTrade;
+using SteamKit2.Internal;
 
 namespace SteamBot
 {
@@ -32,6 +33,7 @@ namespace SteamBot
         public SteamClient SteamClient;
         public SteamTrading SteamTrade;
         public SteamUser SteamUser;
+        public SteamGameCoordinator SteamGameCoordinator;
 
         // The current trade; if the bot is not in a trade, this is
         // null.
@@ -54,6 +56,9 @@ namespace SteamBot
         // The maximum amount of time the bot will wait in between
         // trade actions.
         public int MaximiumActionGap { get; private set; }
+
+        //The current game that the bot is playing, for posterity.
+        public int CurrentGame = 0;
 
         // The Steam Web API key.
         string apiKey;
@@ -119,6 +124,7 @@ namespace SteamBot
             SteamTrade = SteamClient.GetHandler<SteamTrading>();
             SteamUser = SteamClient.GetHandler<SteamUser>();
             SteamFriends = SteamClient.GetHandler<SteamFriends>();
+            SteamGameCoordinator = SteamClient.GetHandler<SteamGameCoordinator>();
 
             backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
             backgroundWorker.DoWork += BackgroundWorkerOnDoWork;
@@ -252,6 +258,21 @@ namespace SteamBot
             return true;
         }
 
+        public void SetGamePlaying(int id)
+        {
+            var gamePlaying = new ClientMsgProtobuf<CMsgClientGamesPlayed>(EMsg.ClientGamesPlayed);
+
+            if (id != 0)
+                gamePlaying.Body.games_played.Add(new CMsgClientGamesPlayed.GamePlayed
+                {
+                    game_id = new GameID(id),
+                });
+
+            SteamClient.Send(gamePlaying);
+
+            CurrentGame = id;
+        }
+
         void HandleSteamMessage (CallbackMsg msg)
         {
             log.Debug(msg.ToString());
@@ -284,7 +305,7 @@ namespace SteamBot
 
                 if (callback.Result == EResult.AccountLogonDenied)
                 {
-                    log.Interface ("This account is protected by Steam Guard.  Enter the authentication code sent to the proper email: ");
+                    log.Interface ("This account is SteamGuard enabled. Enter the code via the `auth' command.");
 
                     // try to get the steamguard auth code from the event callback
                     var eva = new SteamGuardRequiredEventArgs();
@@ -297,7 +318,7 @@ namespace SteamBot
 
                 if (callback.Result == EResult.InvalidLoginAuthCode)
                 {
-                    log.Interface("An Invalid Authorization Code was provided.  Enter the authentication code sent to the proper email: ");
+                    log.Interface("The given SteamGuard code was invalid. Try again using the `auth' command.");
                     logOnDetails.AuthCode = Console.ReadLine();
                 }
             });
@@ -337,6 +358,8 @@ namespace SteamBot
                 log.Success ("Steam Bot Logged In Completely!");
 
                 IsLoggedIn = true;
+
+                GetUserHandler(SteamClient.SteamID).OnLoginCompleted();
             });
 
             // handle a special JobCallback differently than the others
@@ -386,6 +409,13 @@ namespace SteamBot
                                          ));
                     GetUserHandler(callback.Sender).OnMessage(callback.Message, type);
                 }
+            });
+            #endregion
+
+            #region Group Chat
+            msg.Handle<SteamFriends.ChatMsgCallback>(callback =>
+            {
+                GetUserHandler(callback.ChatterID).OnChatRoomMessage(callback.ChatRoomID, callback.ChatterID, callback.Message);
             });
             #endregion
 
